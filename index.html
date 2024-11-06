@@ -1,0 +1,135 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Bastionado arranque Debian 12</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="arranqedebian12"
+                  title="Bastionado arranque Debian 12"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Introducción" duration="0">
+        <p class="image-container"><img alt="Portada" src="img\\68e18ea67c3c262d.jpg"></p>
+<p>A continuación se muestra una guía para bastionar el arranque de un sistema Debian 12, en la cual se indica lo que debemos hacer para impedir que un ciberatacante pueda alterar la secuencia de arranque e inflingir daños en el sistema.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Añadir usuario como root" duration="0">
+        <p>Antes que nada deberemos acceder a la terminal y registrar nuestro usuario como root.</p>
+<p>Para ello introduciremos el comando</p>
+<pre><code>sudo nano /etc/sudoers
+</code></pre>
+<p>y una vez dentro del menú de configuración escribiremos nuestro nombre de usuario y le otorgaremos los permisos de administrador.</p>
+<p class="image-container"><img alt="Usuarioroot" src="img\\c8c41208ac498e04.png"><img alt="Usuarioroot" src="img\\939702fd3caa2acd.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Ocultación del arranque" duration="0">
+        <p>A continuación explicaremos cómo ocultar el menú de GRUB para así dificultar su manipulación.</p>
+<p>Empezaremos introduciendo el comando</p>
+<pre><code>sudo nano /etc/default/grub
+</code></pre>
+<p>en la terminal para editar el archivo de configuración de GRUB, donde modificaremos las siguientes líneas:</p>
+<pre><code>GRUB_TIMEOUT=0
+GRUB_TIMEOUT_STYLE=hidden 
+</code></pre>
+<p class="image-container"><img alt="Ocultacióndelarranque" src="img\\6b84cecde39faba2.png"></p>
+<pre><code>NOTA: Deberemos también descomentar GRUB_DISABLE_OS_ORDER=false para poder guardar los cambios
+</code></pre>
+<p>Una vez hecho esto guardaremos los cambios y actualizaremos GRUB haciendo uso del comando</p>
+<pre><code>sudo update-grub
+</code></pre>
+<p class="image-container"><img alt="Ocultacióndelarranque" src="img\\76c3edccdaf370cb.png"></p>
+<p>Esto ocultará el menú de GRUB y arrancará directamente el sistema operativo predeterminado.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Contraseña de arranque" duration="0">
+        <p>A continuación crearemos una contraseña para proteger el acceso al menú de GRUB.</p>
+<p>Primero generaremos una contraseña cifrada mediante el comando</p>
+<pre><code>grub-mkpasswd-pbkdf2
+</code></pre>
+<p class="image-container"><img alt="Contraseñadearranque" src="img\\fde506ec19e35a6f.png"></p>
+<p>Ahora copiaremos esa contraseña cifrada (texto seleccionado en la foto) e introduciremos el comando</p>
+<pre><code>sudo nano /etc/grub.d/00_header
+</code></pre>
+<p>para editar el archivo de configuración, donde añadiremos las siguientes líneas:</p>
+<pre><code>cat &lt;&lt; EOF
+set superusers=&#34;admin&#34;
+password_pbkdf2 admin &lt;contraseña_cifrada&gt;
+</code></pre>
+<p class="image-container"><img alt="Contraseñadearranque" src="img\\24d3f10016623edc.png"></p>
+<p>Por último actualizaremos GRUB nuevamente con el comando</p>
+<pre><code>sudo update-grub
+</code></pre>
+<p>A partir de ahora se pedirá una contraseña para modificar las entradas de arranque.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Copia de seguridad" duration="0">
+        <p>Es muy importante realizar una copia de seguridad de la configuración de GRUB para poder recuperar esta última si ocurre cualquier incidente.</p>
+<p>Con este fin, crearemos una copia del archivo de configuración introduciendo el comando</p>
+<pre><code>sudo cp /boot/grub/grub.cfg /boot/grub/grub.cfg.backup
+</code></pre>
+<p>y posteriormente haremos una copia de la configuración personalizada con el comando</p>
+<pre><code>sudo cp /etc/default/grub /etc/default/grub.backup
+</code></pre>
+<p class="image-container"><img alt="Copiadeseguridad" src="img\\d917c0d568cb4ea.png"></p>
+<p>Deberemos guardar estas copias en un lugar seguro, preferiblemente en un dispositivo externo.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Otras opciones de seguridad" duration="0">
+        <p>Para reforzar aún más la seguridad del arranque recomendamos realizar las siguientes acciones:</p>
+<h2 is-upgraded>Realizar cifrado del disco</h2>
+<p>Durante la instalación de Debian tendremos la opción de utilizar LUKS (Linux Unified Key Setup-on-disk-format) para cifrar las particiones del sistema, lo que evitará el acceso no autorizado a los datos del disco.</p>
+<p>Accediendo al siguiente enlace podremos seguir un tutorial en el que se explicará cómo realizar los procesos de particionado y cifrado: <a href="https://www.zeppelinux.es/como-instalar-debian-10-con-particiones-cifradas-con-luks/" target="_blank">https://www.zeppelinux.es/como-instalar-debian-10-con-particiones-cifradas-con-luks/</a></p>
+<pre><code>NOTA: Es un tutorial para Debian 10, pero igualmente nos servirá para Debian 12.
+</code></pre>
+<h2 is-upgraded>Utilizar AIDE</h2>
+<p>Advanced Intrusion Detection Environment (AIDE) es una utilidad que crea una base de datos de archivos en el sistema, y luego utiliza esa base de datos para asegurar la integridad de los archivos y detectar intrusiones en el sistema.</p>
+<p>Para instalar AIDE accederemos a la terminal e introduciremos el comando</p>
+<pre><code>sudo apt-get install aide
+</code></pre>
+<p class="image-container"><img alt="AIDE" src="img\\682e8538832b6cda.png"></p>
+<p>Y, por supuesto,</p>
+<h2 is-upgraded>Actualizar regularmente GRUB y el kernel</h2>
+<p>Esto permitirá corregir vulnerabilidades de seguridad en nuestro sistema.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
